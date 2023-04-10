@@ -21,7 +21,7 @@ shinyUI(
     navbarPage(
       id = "mainMenu",
       title = "QRAP",
-      theme = "style/style.css",
+      theme = "style.css",
       # theme = "style/layui.css",
       # footer = includeHTML("footer.html"),
       fluid = TRUE,
