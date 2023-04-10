@@ -1,124 +1,59 @@
-# Depends <- c("DT", "venn", "shiny", "limma", "DESeq2", "gplots", "stringr", "fdrtool",
-#              "ggplot2", "ggrepel", "shinyjs", "reshape2", "pheatmap", "enrichplot", "ggbeeswarm",
-#              "geneplotter", "RColorBrewer", "shinyWidgets", "clusterProfiler", "shinycssloaders",
-#              "sva", "plyr", "dplyr", "Rmisc", "psych", "WGCNA", "doRNG", "igraph", "GENIE3", "plotly",
-#              "shinyBS", "STRINGdb", "GEOquery", "networkD3", "DEGreport", "gprofiler2", "shinyalert",
-#              "ReactomePA", "genefilter", "visNetwork", "edgebundleR", "rentrez", "shinydashboard",
-#              "ggplotify", "ggnewscale", "pathview"
-#              )
-#
-# for (i in Depends) {
-#   if (!requireNamespace(i)) {
-#     BiocManager::install(i)
-#     # print("Not install")
-#   }
-# }
+#' Function to import files by automatically identify delimiters
+#'
+#' @param file_path the name of the file which the data are to be read from.
+#' @param header a logical value indicating whether the file contains the names of the variables as its first line.
+#' @param row_names a vector of row names.
+#' @param stringsAsFactors logical: should character vectors be converted to factors?
+#' @importFrom utils unzip read.table read.csv
+#'
+#' @return data.frame
+#' @export
+#'
+read_files <- function(file_path = NULL, header = TRUE, row_names = 1, stringsAsFactors = F, skip = 0) {
+  # read the second line to identify delimiters
+  if (grepl(x = file_path, pattern = ".zip")) {
+    Lines_2 <- readLines(unzip(file_path), n = 2)[2]
+  } else {
+    Lines_2 <- readLines(file_path, n = 2)[2]
+  }
+  # # identify delimiters
+  if (grepl(x = Lines_2, pattern = "\t") == T) {
+    delimiters <- "\t"
+  } else if (grepl(x = Lines_2, pattern = ",") == T) {
+    delimiters <- ","
+  } else if (grepl(x = Lines_2, pattern = " ") == T) {
+    delimiters <- " "
+  } else if (grepl(x = Lines_2, pattern = ";") == T) {
+    delimiters <- ";"
+  } else if (grepl(x = Lines_2, pattern = "|") == T) {
+    delimiters <- "|"
+  } else if (grepl(x = Lines_2, pattern = ":") == T) {
+    delimiters <- ":"
+  }
+  # # use read.csv function to import files
+  if (grepl(x = file_path, pattern = ".zip")) {
+    data <- read.csv(file = unzip(file_path), header = header, row.names = row_names, sep = delimiters, check.names = F, stringsAsFactors = stringsAsFactors, skip = skip)
+  } else {
+    data <- read.csv(file = file_path, header = header, row.names = row_names, sep = delimiters, check.names = F, stringsAsFactors = stringsAsFactors, skip = skip)
+  }
+  return(data)
+}
 
-# library(QRAP)
-# library(shiny)
-# library(DT)
-# library(gplots)
-# library(venn)
-# library(limma)
-# library(tidyr)
-# library(DOSE)
-# library(tibble)
-# library(DESeq2)
-# library(stringr)
-# library(fdrtool)
-# library(ggplot2)
-# library(ggraph)
-# # library(ggridges)
-# library(ggrepel)
-# library(shinyjs)
-# library(rentrez)
-# library(reshape2)
-# library(pheatmap)
-# library(pathview)
-# library(enrichplot)
-# library(ggbeeswarm)
-# library(geneplotter)
-# library(RColorBrewer)
-# library(shinyWidgets)
-# library(clusterProfiler)
-# library(shinycssloaders)
-# 
-# 
-# library(sva)
-# library(plyr)
-# library(dplyr)
-# library(Rmisc)
-# library(psych)
-# library(WGCNA)
-# library(doRNG)
-# library(igraph)
-# library(GENIE3)
-# library(plotly)
-# library(shinyBS)
-# library(STRINGdb)
-# library(GEOquery)
-# # library(networkD3)
-# library(DEGreport)
-# library(gprofiler2)
-# library(shinyalert)
-# library(ReactomePA)
-# library(genefilter)
-# library(visNetwork)
-# library(edgebundleR)
+#' Load in data sets and creat dataframe of Reads Number
+#'
+#' @param path the name of the file which the data are to be read from.
+#' @param header a logical value indicating whether the file contains the names of the variables as its first line.
+#' @param row_names a logical value indicating whether the file contains the names of the variables as its first column.
+#'
+#' @return data.frame
+#' @export
+#'
 
-# options(url.method='libcurl')
-# 
-# get.DEGs <- function(dds, ctrl, treat, p.adjust = 0.05, abs.lfc = 1, save = FALSE) {
-#   if (length(treat) == 0) {
-#     stop("Treatment groups can not be null ...", call. = FALSE)
-#   }
-#   DEGs.List <- lapply(treat, function(x){
-#     Res <- as.data.frame(results(dds, contrast = c("condition", x, ctrl)))
-#     Des <- subset(Res, padj < p.adjust & abs(log2FoldChange) > abs.lfc)
-#     if (save == TRUE) {
-#       if (!dir.exists("REGs")) {
-#         dir.create("REGs")
-#       }
-#       write.csv(Res, paste0("REGs/", x, "_vs_", ctrl, ".csv"))
-# 
-#       if (!dir.exists("DEGs")) {
-#         dir.create("DEGs")
-#       }
-#       write.csv(Des, paste0("DEGs/", x, "_vs_", ctrl, ".csv"))
-#     }
-#     return(Res)
-#   })
-#   names(DEGs.List) <- paste(treat, ctrl, sep = "_vs_")
-#   return(DEGs.List)
-# }
-# 
-# load.DEGs <- function(filesName) {
-#   DEGs.files <- paste0("DEGs/", filesName, ".csv")
-#   DEGs.List <- lapply(DEGs.files, function(x){
-#     read.csv(x, row.names = 1, header = T)
-#   })
-#   names(DEGs.List) <- filesName
-#   return(DEGs.List)
-# }
-# 
-# load.REGs <- function(filesName) {
-#   REGs.files <- paste0("REGs/", filesName, ".csv")
-#   REGs.List <- lapply(REGs.files, function(x){
-#     read.csv(x, row.names = 1, header = T)
-#   })
-#   names(REGs.List) <- filesName
-#   return(REGs.List)
-# }
-# 
-# subset.Tab <- function(dds, condition) {
-#   sampleTable <- as.data.frame(colData(dds))
-#   rownames(sampleTable) <- sampleTable$samples
-#   idx <- lapply(condition, function(x){
-#     sampleTable[sampleTable$condition == x, "samples"]
-#   }) %>% unlist
-#   idx <- idx[idx %in% rownames(sampleTable)]
-#   sampleTable <- sampleTable[idx, ]
-#   return(sampleTable)
-# }
-# 
-# 
+upload.data <- function(path, header, row_names = TRUE, skip = 0) {
+  if (isTRUE(row_names)) {
+    df <- read_files(file_path = path, header = header, row_names = 1, skip = skip)
+  } else {
+    df <- read_files(file_path = path, header = header, row_names = NULL, skip = skip)
+  }
+  return(df)
+}
